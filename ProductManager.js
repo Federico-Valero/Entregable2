@@ -1,4 +1,4 @@
-const fs= requiere('fs')
+const fs= require('fs')
 
 class ProductManager{
     constructor (path) {
@@ -8,6 +8,8 @@ class ProductManager{
 
     async addProduct(title,description,price,thumbnail,code,stock,){
         if (title!='' && description!='' && price!=0 && thumbnail!='' && code!='' && stock!=0){
+            const productsString= await fs.promises.readFile(this.path,'utf-8')
+            this.products= JSON.parse(productsString)
             const sameCode = this.products.find ((element)=> (element.code === code))
             if (sameCode){
                 console.log("No se puede ingresar productos con el mismo codigo")
@@ -22,7 +24,7 @@ class ProductManager{
                 id++
                 this.products.push({id:id, title, description,price,thumbnail,code,stock})
                 const productsString= JSON.stringify(this.products,null,2)
-                await fs.promises.writeFile('products.json',productsString)
+                await fs.promises.writeFile(this.path,productsString)
             }
         }else{
             console.log("Debe ingresar los valores para agregar el producto")
@@ -30,47 +32,52 @@ class ProductManager{
     }
 
     async getProducts(){
-        const productsString= await fs.promises.readFile('products.json','utf-8')
+        const productsString= await fs.promises.readFile(this.path,'utf-8')
         this.products= JSON.parse(productsString)
         console.log(this.products)
     }
 
     async getProductById(id){
-        const productsString= await fs.promises.readFile('products.json','utf-8')
-        this.products= JSON.parse(productsString)
+        const productsString= await fs.promises.readFile(this.path,'utf-8')
+        this.products= await JSON.parse(productsString)
         const findProduct = this.products.find ((product)=>(product.id == id))
         if(findProduct){
-            console.log(this.products[id-1])
+            const index= this.products.findIndex((element)=>(element.id == id))
+            console.log(this.products[index])
         }else{
             console.log("No existe el producto con id " + id)
         }
     }
 
-    async updateProduct(id,modifier){
-        const productsString= await fs.promises.readFile('products.json','utf-8')
+    async updateProductById(id,modifier){
+        const productsString= await fs.promises.readFile(this.path,'utf-8')
         this.products= JSON.parse(productsString)
         const findProduct = this.products.find ((product)=>(product.id == id))
         if (findProduct) {
-            const modifiedProduct= this.products[id-1]
-            modifiedProduct={...modifiedProduct,modifier}
-            this.products.push(modifiedProduct)
+            const index= this.products.findIndex((element)=>(element.id == id))
+            let modifiedProduct= this.products[index]
+            modifiedProduct={...modifiedProduct,...modifier}
+            this.products[index]={...modifiedProduct}
             const productsString= JSON.stringify(this.products,null,2)
-            await fs.promises.writeFile('products.json',productsString)
+            await fs.promises.writeFile(this.path,productsString)
         } else {
             console.log(`No se encontro un producto con id ${id}`)
         }
     }
 
     async deleteProduct(id){
-        const productsString= await fs.promises.readFile('products.json','utf-8')
+        const productsString= await fs.promises.readFile(this.path,'utf-8')
         this.products= JSON.parse(productsString)
         const findProduct = this.products.find ((product)=>(product.id == id))
         if (findProduct) {
-            this.products.splice(id-1,1)
+            const index= this.products.findIndex((element)=>(element.id == id))
+            this.products.splice(index,1)
             const productsString= JSON.stringify(this.products,null,2)
-            await fs.promises.writeFile('products.json',productsString)
+            await fs.promises.writeFile(this.path,productsString)
         } else {
             console.log(`No se encontro un producto con id ${id}`)
         }
     }
 }
+
+const product= new ProductManager ('products.json')
