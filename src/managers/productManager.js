@@ -7,7 +7,7 @@ class ProductManager{
     }
 
     async addProduct(title,description,price,thumbnail,code,stock,){
-        if (title!='' && description!='' && price!=0 && thumbnail!='' && code!='' && stock!=0){
+        if (title!='' && description!='' && price!=0 && thumbnail && code!='' && stock!=0){
             const productsString= await fs.promises.readFile(this.path,'utf-8')
             this.products= JSON.parse(productsString)
             const sameCode = this.products.find ((element)=> (element.code === code))
